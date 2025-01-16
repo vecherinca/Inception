@@ -1,24 +1,29 @@
-FROM	debian:buster
+FROM	debian:bullseye
 
-#install all the program
-RUN		apt-get update
-RUN		apt-get install -y nginx \
-                openssl
+# installing nginx + utils
+RUN 	apt-get update -y && \
+		apt-get upgrade -y && \
+		apt-get install -y nginx \
+		openssl \
+		# vim \
+		curl && \
+		apt-get clean
 
-# nginx SSL
-RUN mkdir /etc/nginx/ssl
-RUN openssl req -newkey rsa:4096 -x509 -sha256 -days 365 -nodes \
-       -out /etc/nginx/ssl/parallels.crt \
-       -keyout /etc/nginx/ssl/parallels.key \
-       -subj "/C=FR/ST=Paris/L=Paris/O=42 School/OU=parallels/CN=parallels/"
+# creating ssl contract and its location + autosigning it
+RUN		mkdir -p /etc/nginx/ssl/
+RUN		openssl req -x509 -nodes -out /etc/nginx/ssl/inception.crt -keyout \
+		/etc/nginx/ssl/inception.key -subj "/C=FR/ST=IDF/L=Paris/O=42/OU=42/CN=mklimina.42.fr/UID=mklimina@student.42.fr"
 
-COPY ./nginx.conf /etc/nginx/conf.d
+# creating run/nginx/file
+RUN		mkdir -p /var/run/nginx/
 
-# nginx config
-RUN mkdir -p /run/nginx
+# giving perms to www/html/
+RUN 	chmod 755 /var/www/html/ && \
+		chown -R www-data:www-data /var/www/html/
 
-#the only port allowed
+# copying nginx config file
+COPY 	./nginx.conf /etc/nginx/nginx.conf
+
 EXPOSE	443
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+CMD		["nginx", "-g", "daemon off;"]

@@ -1,33 +1,37 @@
-FROM debian:buster
-RUN echo "loool"
-RUN apt-get update
-RUN apt-get install -y mariadb-server \
-    mariadb-client \
-    vim \
-    && rm -rf /var/lib/apt/lists/*
+FROM	debian:bullseye
 
-#Allow to run the daemon of mysql
-# Purge and re-create /var/lib/mysql with appropriate ownership
-# ensure that /var/run/mysqld (used for socket and lock files) is writable regardless of the UID our mysqld instance ends up having at runtime
-RUN mkdir -p /var/run/mysqld \
-&& chown -R mysql:mysql /var/run/mysqld \
-&& chmod 777 /var/run/mysqld
+# installing mariadb + utils
+RUN		apt-get update -y && \
+		apt-get upgrade -y && \
+		apt-get install -y mariadb-server \
+		mariadb-client \
+		# vim \
+		&& apt-get clean
 
-EXPOSE 3306
+# env variables for individual testing (without docker compose)
+ENV SQL_DATABASE=db_inception
+ENV SQL_USER=db_user
+ENV SQL_PASSWORD=db_password
+ENV SQL_ROOT_PASSWORD=db_root_password
+ENV SQL_HOST=mariadb:3306
 
-#COPY		./conf/mysqld.conf ~/my.cnf
-#COPY		./conf/mysqld.conf /etc/mysql/my.cnf
-#COPY		./conf/mysqld.conf /etc/my.cnf
+# creating necessary directories and giving perms
+RUN		mkdir -p /var/run/mysqld/ && \
+		mkdir -p /var/lib/mysql/ && \
+		chown mysql:mysql /var/run/mysqld/ && \
+		chown mysql:mysql /var/lib/mysql/ && \
+		chmod -R 755 /var/run/mysqld/ && \
+		chmod -R 755 /var/lib/mysql/
 
+# copying mariadb start up script + giving perms
+RUN 	mkdir -p /etc/mariadb/startup_script/
+COPY	./tools/mariadb-script.sh /etc/mariadb/startup_script/mariadb-script.sh
+RUN		chmod -R 755 /etc/mariadb/startup_script/mariadb-script.sh
 
-#Copy of the .sh and .sql in the /bin of the container to be able to run the program
-# Give the right to execute + launch the .sh
-COPY ./tools/mariadb.sh /usr/local/bin/
-COPY ./conf/wordpress.sql /usr/local/bin/
-RUN chmod +x /usr/local/bin/mariadb.sh
-RUN chmod +x /usr/local/bin/wordpress.sql
+# copying mariadb config file
+COPY	./conf/mysql.conf /etc/mysql/mariadb.conf.d/50-server.cnf
 
-ENTRYPOINT [ "/usr/local/bin/mariadb.sh" ]
+EXPOSE	3306
 
-#Command to launch mariadb and enable the database to listen globally - also can be put on mysqldump.cnf file
-CMD ["mysqld", "--bind-address=0.0.0.0"]
+# executing script
+ENTRYPOINT ["bash", "/etc/mariadb/startup_script/mariadb-script.sh"]

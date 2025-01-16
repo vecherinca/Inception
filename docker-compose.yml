@@ -1,61 +1,81 @@
-version: '3'
+version: '3.9'
 
 services:
-  nginx:
-    container_name: nginx
-    build: nginx/
-    ports:
-      - 443:443
-    volumes:
-      - wordpress_data:/var/www/html
-    restart: always
-    networks:
-      - network
-
   mariadb:
+    image: mariadb
     container_name: mariadb
-    build: mariadb/
-    #volumes allow to store in a persistent disk the content in a local disk
-    #db_data is a volume created by docker directly
+    build:
+      context: ./mariadb/
+      dockerfile: Dockerfile
     volumes:
-      - mariadb_data:/var/lib/mysql
-    # in case of problem we restart automatically the container
+      - mariadb-data:/var/lib/mysql/
+    expose:
+      - "3306"
     networks:
-      - network
-    restart: always
-    env_file:
+      - inception
+    restart: unless-stopped
+    env_file: 
       - .env
+    healthcheck:
+      test: mysqladmin ping --host=localhost -p${SQL_ROOT_PASSWORD}
+      interval: 5s
+      timeout: 1s
+      retries: 20
+      start_period: 5s
 
   wordpress:
+    image: wordpress
     container_name: wordpress
-    #Create a depedency between the 2 container, db will be launched before
-    depends_on:
-      - mariadb
     build:
-      context: wordpress/
+      context: ./wordpress
       dockerfile: Dockerfile
-    restart: always
-    env_file:
-      - .env
     volumes:
-      - wordpress_data:/var/www/html
+      - wordpress-data:/var/www/html/wordpress/
+    expose:
+      - "9000"
     networks:
-      - network
+      - inception
+    restart: unless-stopped
+    env_file: 
+      - .env
+    depends_on:
+      mariadb:
+        condition: service_healthy
 
-volumes:
-  mariadb_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: /home/parallels/data/mysql
-      o: bind
-  wordpress_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: /home/parallels/data/wordpress
-      o: bind
+  nginx:
+    image: nginx
+    container_name: nginx
+    build:
+      context: ./nginx/
+      dockerfile: Dockerfile
+    volumes:
+      - wordpress-data:/var/www/html/wordpress/
+    ports:
+      - "443:443"
+    networks:
+      - inception
+    restart: unless-stopped
+    depends_on:
+      - wordpress
+
+
+# ========================================================== #
 
 networks:
-  network:
+  inception:
+    name: inception
     driver: bridge
+
+volumes:
+  wordpress-data:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '/home/mklimina/data/wordpress'
+  mariadb-data:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '/home/mklimina/data/mariadb'
