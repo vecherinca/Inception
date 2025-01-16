@@ -8,13 +8,6 @@ RUN		apt-get update -y && \
 		# vim \
 		&& apt-get clean
 
-# env variables for individual testing (without docker compose)
-ENV SQL_DATABASE=db_inception
-ENV SQL_USER=db_user
-ENV SQL_PASSWORD=db_password
-ENV SQL_ROOT_PASSWORD=db_root_password
-ENV SQL_HOST=mariadb:3306
-
 # creating necessary directories and giving perms
 RUN		mkdir -p /var/run/mysqld/ && \
 		mkdir -p /var/lib/mysql/ && \
