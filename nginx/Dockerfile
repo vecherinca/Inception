@@ -6,9 +6,8 @@ RUN 	apt-get update -y && \
 		apt-get install -y nginx \
 		openssl \
 		# vim \
-		curl && \
-		apt-get clean
-
+        curl && \
+        apt-get clean
 # creating ssl contract and its location + autosigning it
 RUN		mkdir -p /etc/nginx/ssl/
 RUN		openssl req -x509 -nodes -out /etc/nginx/ssl/inception.crt -keyout \

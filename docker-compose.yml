@@ -58,9 +58,6 @@ services:
     depends_on:
       - wordpress
 
-
-# ========================================================== #
-
 networks:
   inception:
     name: inception
