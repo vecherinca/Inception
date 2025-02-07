@@ -33,4 +33,4 @@ wait "$pid"
 
 # starting MariaDB in the foreground
 echo -e "\e[1;36m================ ⚡ STARTING MARIA DB (FG) ⚡ =================\e[0m"
-exec mysqld_safe
+exec mysqld

@@ -6,15 +6,6 @@ echo -e "\e[1;36m============= 📂 ENTERING DIR 📂 =============\e[0m"
 echo "cd /var/www/html/wordpress"
 cd /var/www/html/wordpress
 
-echo -e "\e[1;33m============== 🛠️ PINGING DB 🛠️ ==============\e[0m"
-
-#while ! mysqladmin ping --silent; do
-#	echo "Waiting for MariaDB to start..."
-#	sleep 1
-#done
-
-echo -e "\e[1;32mMariaDB is \e[38;5;34mready\e[0m. 🚀"
-
 echo -e "\e[1;34m========= 🔍 CHECKING FOR WP CORE 🔍 =========\e[0m"
 
 if ! wp core is-installed --allow-root; then
@@ -59,7 +50,7 @@ if [ ! -d /run/php ]; then
 	echo -e "\e[1;32mDir '/run/php/' created \e[38;5;34msuccesfully\e[0m. 🎉"
 fi
 
-echo -e "\e[38;5;34m############### ✅ FINISHED ✅ ###############\e[0m"
+echo -e "\e[1;38;5;34m############### ✅ FINISHED ✅ ###############\e[0m"
 
 cd /var/www/html/wordpress/
 chmod 755 -R wp-content
